@@ -1,0 +1,30 @@
+name: update image list
+
+on:
+  push:
+    paths:
+      - 'images/**'
+    branches:
+      - main
+
+jobs:
+  update-image-list:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: generate image list
+        run: |
+          cd images
+          echo "{\"images\": [" > ../gallery-data.json
+          ls -1 *.jpg *.jpeg *.png *.gif 2>/dev/null | sed 's/^/"/;s/$/"/' | paste -sd "," >> ../gallery-data.json
+          echo "]}" >> ../gallery-data.json
+      
+      - name: commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add gallery-data.json
+          git commit -m "updated image list" || echo "no changes to commit"
+          git push
